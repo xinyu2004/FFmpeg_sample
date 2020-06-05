@@ -66,7 +66,7 @@ void main(int argc, char* argv[])
         {
             case AVMEDIA_TYPE_VIDEO:
                 fps = (float)pFormatCtx->streams[i]->r_frame_rate.num/(float)pFormatCtx->streams[i]->r_frame_rate.den;
-                printf("Video index: %d, fps: %f\n", pFormatCtx->streams[i]->index, fps);
+                printf("Video index: %d, fps: %f, pix_format: %d\n", pFormatCtx->streams[i]->index, fps, pFormatCtx->streams[video_index]->codecpar->format);
                 video_index = pFormatCtx->streams[i]->index;
                 break;
 
@@ -84,6 +84,13 @@ void main(int argc, char* argv[])
     }
 
 #ifdef SHOW_YUV
+    p_yuv = (char*)malloc(pFormatCtx->streams[video_index]->codecpar->width * pFormatCtx->streams[video_index]->codecpar->height * 2);
+    if(p_yuv == NULL)
+    {
+        printf("malloc yuv data!\n");
+        goto error;
+    }
+
     if(SDL_Init(SDL_INIT_EVERYTHING))
     {
         printf("SDL initialize false! %s\n", SDL_GetError());
@@ -129,15 +136,6 @@ void main(int argc, char* argv[])
         goto error;
     }
 
-#ifdef SHOW_YUV
-    p_yuv = (char*)malloc(pFormatCtx->streams[video_index]->codecpar->width * pFormatCtx->streams[video_index]->codecpar->height * 2);
-    if(p_yuv == NULL)
-    {
-        printf("malloc yuv data!\n");
-        goto error;
-    }
-#endif
-
     pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
     if(pCodec == NULL)
     {
@@ -146,7 +144,7 @@ void main(int argc, char* argv[])
     }
     else
     {
-        printf("Found codec %s, fix_format: %d\n", pCodec->name, pFormatCtx->streams[video_index]->codecpar->format);
+        printf("Found codec %s\n", pCodec->name);
     }
 
     //open decoder
